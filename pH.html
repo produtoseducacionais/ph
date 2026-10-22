@@ -1,0 +1,269 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Laboratório de pH</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: aviso no topo; bancada em duas colunas (substâncias | béquer + escala); desafios abaixo */
+:root{
+  --bg:#eef2f6; --surface:#ffffff; --surface-2:#e3e9f0; --fg:#18222f; --muted:#556275;
+  --line:#cdd6e1; --accent:#3d3fa8; --accent-soft:#e2e2f7;
+  --acid:#c42a4b; --neutral:#5b4fb0; --base:#1f8f6a;
+  --ok:#1d7f4e; --ok-bg:#dcf2e6; --bad:#b3263e; --bad-bg:#fbe1e6; --warn-bg:#fff4d6; --warn-fg:#6b4a00; --warn-line:#e9c76a;
+  --glass:rgba(255,255,255,.55); --glass-line:#9aa8b8;
+  --f-display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "Consolas", monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161e; --surface:#19212c; --surface-2:#222c39; --fg:#e7edf5; --muted:#9aa8ba;
+  --line:#2f3b4b; --accent:#9fa2ff; --accent-soft:#2a2c55;
+  --acid:#ff7d95; --neutral:#a99cff; --base:#5fd3a6;
+  --ok:#6fe0a5; --ok-bg:#16352a; --bad:#ff8fa3; --bad-bg:#3c1a22; --warn-bg:#2f2610; --warn-fg:#f3d88f; --warn-line:#6b5420;
+  --glass:rgba(255,255,255,.06); --glass-line:#5d6c80; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161e; --surface:#19212c; --surface-2:#222c39; --fg:#e7edf5; --muted:#9aa8ba;
+  --line:#2f3b4b; --accent:#9fa2ff; --accent-soft:#2a2c55;
+  --acid:#ff7d95; --neutral:#a99cff; --base:#5fd3a6;
+  --ok:#6fe0a5; --ok-bg:#16352a; --bad:#ff8fa3; --bad-bg:#3c1a22; --warn-bg:#2f2610; --warn-fg:#f3d88f; --warn-line:#6b5420;
+  --glass:rgba(255,255,255,.06); --glass-line:#5d6c80; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1}
+h1{font-size:clamp(2rem,5vw,3rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.45rem;font-weight:800}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+header{display:flex;flex-direction:column;gap:8px}
+header p{margin:0;color:var(--muted);max-width:62ch}
+
+.aviso{display:flex;gap:12px;align-items:flex-start;background:var(--warn-bg);color:var(--warn-fg);border:1.5px dashed var(--warn-line);border-radius:10px;padding:12px 16px}
+.aviso strong{display:block}
+.aviso svg{flex:none;margin-top:2px}
+
+.bancada{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px}
+@media (max-width:820px){.bancada{grid-template-columns:1fr}}
+.painel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+
+.lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.subst{display:flex;align-items:center;gap:10px;text-align:left;font:inherit;font-size:.95rem;color:var(--fg);background:var(--surface-2);border:1.5px solid transparent;border-radius:9px;padding:8px 10px;cursor:pointer;transition:border-color .15s,background .15s}
+.subst:hover{border-color:var(--glass-line)}
+.subst:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.subst[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.subst .ico{font-size:1.25rem;line-height:1;flex:none;width:1.5rem;text-align:center}
+
+.leitura{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center}
+@media (max-width:440px){.leitura{grid-template-columns:1fr;justify-items:center}}
+.bequer{width:150px;max-width:100%}
+.bequer .liquido{transition:fill .7s ease}
+@media (prefers-reduced-motion:reduce){.bequer .liquido,.ponteiro,.subst{transition:none!important}}
+.info{display:flex;flex-direction:column;gap:6px;min-width:0}
+.info h3{font-size:1.5rem}
+.ph-num{font-family:var(--f-mono);font-weight:700;font-size:2.6rem;font-variant-numeric:tabular-nums;line-height:1}
+.ph-num small{font-size:1rem;color:var(--muted);font-weight:500}
+.desc{color:var(--muted);margin:0;font-size:.95rem}
+.toggle{align-self:flex-start;font:inherit;font-weight:700;font-size:.9rem;border-radius:999px;padding:7px 14px;cursor:pointer;border:1.5px solid var(--accent);background:transparent;color:var(--accent)}
+.toggle[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.toggle:focus-visible,.cls:focus-visible,.op:focus-visible,.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.escala{display:flex;flex-direction:column;gap:6px}
+.barra-wrap{position:relative;padding-top:26px}
+.barra{height:26px;border-radius:6px;border:1px solid var(--line)}
+.ponteiro{position:absolute;top:0;transform:translateX(-50%);transition:left .7s cubic-bezier(.3,.8,.3,1);display:flex;flex-direction:column;align-items:center}
+.ponteiro span{font-family:var(--f-mono);font-size:.75rem;font-weight:700;background:var(--fg);color:var(--bg);padding:1px 6px;border-radius:4px}
+.ponteiro i{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid var(--fg)}
+.ticks{display:grid;grid-template-columns:repeat(15,1fr);font-family:var(--f-mono);font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums;margin:0 -3.571%}
+.ticks span{text-align:center}
+.faixas{display:flex;justify-content:space-between;font-size:.8rem;font-weight:700}
+.faixas .a{color:var(--acid)} .faixas .n{color:var(--neutral)} .faixas .b{color:var(--base)}
+
+.classifica{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.classifica p{margin:0;font-weight:700}
+.cls-row{display:flex;flex-wrap:wrap;gap:8px}
+.cls{font:inherit;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;background:var(--surface-2);color:var(--fg);border:1.5px solid var(--line)}
+.cls:hover{border-color:var(--glass-line)}
+.fb{margin:0;font-size:.95rem;padding:8px 12px;border-radius:8px}
+.fb.ok{background:var(--ok-bg);color:var(--ok)} .fb.bad{background:var(--bad-bg);color:var(--bad)}
+
+.desafios .topo{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
+.placar{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.pontos{display:flex;gap:6px}
+.pontos b{width:28px;height:6px;border-radius:3px;background:var(--line)}
+.pontos b.atual{background:var(--accent)} .pontos b.c{background:var(--ok)} .pontos b.e{background:var(--bad)}
+.pergunta{font-size:1.15rem;font-weight:700;margin:0;max-width:65ch}
+.ops{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.op{font:inherit;text-align:left;padding:11px 14px;border-radius:9px;cursor:pointer;background:var(--surface-2);color:var(--fg);border:1.5px solid var(--line)}
+.op:hover:not(:disabled){border-color:var(--accent)}
+.op:disabled{cursor:default}
+.op.certa{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.op.errada{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.explica{margin:0;color:var(--fg);background:var(--surface-2);border-radius:9px;padding:10px 14px;max-width:70ch}
+.btn{align-self:flex-start;font:inherit;font-weight:700;padding:9px 18px;border-radius:9px;cursor:pointer;border:none;background:var(--accent);color:var(--surface)}
+.final{display:flex;flex-direction:column;gap:10px}
+.final .nota{font-family:var(--f-display);font-weight:800;font-size:2.4rem}
+footer{color:var(--muted);font-size:.85rem;max-width:75ch}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Ciências · 9º ano · Ácidos e bases</span>
+    <h1>Laboratório de pH</h1>
+    <p>Escolha uma substância do dia a dia, pingue o indicador de repolho roxo e veja onde ela fica na escala de pH, de 0 a 14.</p>
+  </header>
+
+  <div class="aviso" role="note">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 1 21h22L12 2zm0 5.5 6.9 11.5H5.1L12 7.5zM11 10v4h2v-4h-2zm0 5v2h2v-2h-2z"/></svg>
+    <div><strong>Simulação didática, não um experimento real.</strong>Os valores de pH são aproximados e as cores são uma representação do indicador. Produtos como água sanitária, amônia e soda cáustica são perigosos: nunca teste em casa sem a supervisão de um professor.</div>
+  </div>
+
+  <section class="bancada" aria-label="Simulador">
+    <div class="painel">
+      <h2>Substâncias</h2>
+      <div class="lista" id="lista" role="group" aria-label="Escolha uma substância"></div>
+    </div>
+
+    <div class="painel">
+      <div class="leitura">
+        <svg class="bequer" viewBox="0 0 150 180" role="img" aria-labelledby="bq-t">
+          <title id="bq-t">Béquer com a solução</title>
+          <defs><clipPath id="dentro"><path d="M22 20 L22 160 Q22 170 32 170 L118 170 Q128 170 128 160 L128 20 Z"/></clipPath></defs>
+          <g clip-path="url(#dentro)">
+            <rect class="liquido" id="liquido" x="0" y="62" width="150" height="120" fill="#ccc"/>
+            <rect x="0" y="62" width="150" height="4" fill="#fff" opacity=".35"/>
+          </g>
+          <path d="M14 14 L22 20 L22 160 Q22 170 32 170 L118 170 Q128 170 128 160 L128 20 L136 14" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="3" stroke-linejoin="round"/>
+          <g stroke="var(--glass-line)" stroke-width="2">
+            <line x1="128" y1="50" x2="114" y2="50"/><line x1="128" y1="80" x2="118" y2="80"/>
+            <line x1="128" y1="110" x2="114" y2="110"/><line x1="128" y1="140" x2="118" y2="140"/>
+          </g>
+          <rect x="34" y="34" width="8" height="118" rx="4" fill="#fff" opacity=".25"/>
+        </svg>
+        <div class="info" aria-live="polite">
+          <h3 id="nome">—</h3>
+          <div class="ph-num" id="phnum"><small>pH ≈</small> —</div>
+          <p class="desc" id="desc"></p>
+          <button class="toggle" id="toggle" aria-pressed="true">Indicador adicionado</button>
+        </div>
+      </div>
+
+      <div class="escala">
+        <div class="barra-wrap">
+          <div class="ponteiro" id="ponteiro" style="left:50%"><span id="ptxt">7</span><i></i></div>
+          <div class="barra" id="barra"></div>
+        </div>
+        <div class="ticks" aria-hidden="true" id="ticks"></div>
+        <div class="faixas"><span class="a">← mais ácido</span><span class="n">neutro</span><span class="b">mais básico →</span></div>
+      </div>
+
+      <div class="classifica">
+        <p>Classifique esta substância:</p>
+        <div class="cls-row">
+          <button class="cls" data-c="acida">Ácida</button>
+          <button class="cls" data-c="neutra">Neutra</button>
+          <button class="cls" data-c="basica">Básica</button>
+        </div>
+        <p class="fb" id="fb" hidden></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="painel desafios" aria-label="Desafios">
+    <div class="topo">
+      <h2>Cinco desafios</h2>
+      <span class="placar" id="placar">0 de 5 acertos</span>
+    </div>
+    <div class="pontos" id="pontos" aria-hidden="true"></div>
+    <div id="quiz"></div>
+  </section>
+
+  <footer>Escala de pH a 25 °C: abaixo de 7, ácido; igual a 7, neutro; acima de 7, básico (alcalino). Cada unidade de pH a menos representa uma solução 10 vezes mais ácida. As cores seguem o comportamento típico do extrato de repolho roxo, um indicador natural que pode mudar de tom conforme o preparo.</footer>
+</div>
+
+<script>
+const SUBS=[
+ {n:"Suco gástrico",i:"🍽️",ph:1.5,d:"Ácido do estômago, que ajuda na digestão dos alimentos."},
+ {n:"Suco de limão",i:"🍋",ph:2.3,d:"Rico em ácido cítrico. Por isso o gosto azedo."},
+ {n:"Refrigerante de cola",i:"🥤",ph:2.5,d:"Contém ácido fosfórico e gás carbônico dissolvido."},
+ {n:"Vinagre",i:"🫙",ph:2.9,d:"Solução de ácido acético usada na cozinha."},
+ {n:"Suco de laranja",i:"🍊",ph:3.7,d:"Também tem ácido cítrico, em menor concentração que o limão."},
+ {n:"Café",i:"☕",ph:5.0,d:"Levemente ácido por causa dos ácidos clorogênicos."},
+ {n:"Água da chuva",i:"🌧️",ph:5.6,d:"O gás carbônico do ar deixa a chuva levemente ácida."},
+ {n:"Leite",i:"🥛",ph:6.6,d:"Muito próximo do neutro, mas levemente ácido."},
+ {n:"Água pura",i:"💧",ph:7.0,d:"Água destilada a 25 °C: o ponto neutro da escala."},
+ {n:"Sangue humano",i:"🩸",ph:7.4,d:"O corpo mantém o sangue levemente básico, entre 7,35 e 7,45."},
+ {n:"Água do mar",i:"🌊",ph:8.1,d:"Os sais dissolvidos deixam o mar levemente básico."},
+ {n:"Bicarbonato de sódio",i:"🧂",ph:8.3,d:"Dissolvido em água, forma uma solução fracamente básica."},
+ {n:"Pasta de dente",i:"🪥",ph:9.0,d:"Básica para ajudar a neutralizar ácidos na boca."},
+ {n:"Leite de magnésia",i:"💊",ph:10.5,d:"Antiácido: neutraliza o excesso de ácido no estômago."},
+ {n:"Amônia de limpeza",i:"🧴",ph:11.5,d:"Produto de limpeza básico. Irritante para olhos e pele."},
+ {n:"Água sanitária",i:"🧪",ph:12.5,d:"Hipoclorito de sódio. Corrosiva: nunca misture com outros produtos."},
+ {n:"Soda cáustica",i:"⚠️",ph:13.5,d:"Hidróxido de sódio em solução. Causa queimaduras graves."}
+];
+// Cores típicas do indicador de repolho roxo
+const STOPS=[[0,[200,16,46]],[2,[224,36,94]],[4,[176,58,140]],[6,[123,63,160]],[7,[91,79,176]],[8,[58,111,196]],[9,[42,157,154]],[10,[59,178,115]],[12,[140,198,63]],[14,[242,210,46]]];
+function cor(ph){for(let k=0;k<STOPS.length-1;k++){const[a,ca]=STOPS[k],[b,cb]=STOPS[k+1];if(ph<=b){const t=(ph-a)/(b-a);return`rgb(${ca.map((v,j)=>Math.round(v+(cb[j]-v)*t)).join(",")})`}}return"rgb(242,210,46)"}
+const fmt=v=>v.toFixed(1).replace(".",",");
+function classe(ph){return ph<7?"acida":ph>7?"basica":"neutra"}
+function rotulo(ph){if(ph===7)return"neutra";const lev=Math.abs(ph-7)<=1.5?"levemente ":"";return lev+(ph<7?"ácida":"básica")}
+
+const $=id=>document.getElementById(id);
+$("barra").style.background=`linear-gradient(90deg,${STOPS.map(([p])=>cor(p)+" "+(p/14*100)+"%").join(",")})`;
+$("ticks").innerHTML=Array.from({length:15},(_,i)=>`<span>${i}</span>`).join("");
+
+let atual=1, indicador=true;
+$("lista").innerHTML=SUBS.map((s,k)=>`<button class="subst" id="s${k}" data-k="${k}" aria-pressed="false"><span class="ico" aria-hidden="true">${s.i}</span><span>${s.n}</span></button>`).join("");
+$("lista").addEventListener("click",e=>{const b=e.target.closest(".subst");if(b)selecionar(+b.dataset.k)});
+$("toggle").addEventListener("click",()=>{indicador=!indicador;render()});
+document.querySelectorAll(".cls").forEach(b=>b.addEventListener("click",()=>{
+  const s=SUBS[atual],certo=classe(s.ph),fb=$("fb");fb.hidden=false;
+  if(b.dataset.c===certo){fb.className="fb ok";fb.textContent=`Isso! Com pH ≈ ${fmt(s.ph)}, a substância é ${rotulo(s.ph)}.`}
+  else{fb.className="fb bad";fb.textContent=`Ainda não. Observe a escala: pH ${s.ph<7?"menor":s.ph>7?"maior":"igual"} que 7 indica substância ${certo==="acida"?"ácida":certo==="basica"?"básica":"neutra"}.`}
+}));
+function selecionar(k){atual=k;$("fb").hidden=true;render()}
+function render(){
+  const s=SUBS[atual];
+  document.querySelectorAll(".subst").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.k===atual));
+  $("nome").textContent=s.n;
+  $("phnum").innerHTML=`<small>pH ≈</small> ${fmt(s.ph)}`;
+  $("desc").textContent=s.d;
+  $("liquido").setAttribute("fill",indicador?cor(s.ph):"#d9dee4");
+  $("liquido").setAttribute("opacity",indicador?"1":".7");
+  $("toggle").setAttribute("aria-pressed",indicador);
+  $("toggle").textContent=indicador?"Indicador adicionado":"Adicionar indicador";
+  $("ponteiro").style.left=(s.ph/14*100)+"%";
+  $("ptxt").textContent=fmt(s.ph);
+}
+render();
+
+// Desafios
+const Q=[
+ {p:"Entre vinagre (pH ≈ 2,9) e leite (pH ≈ 6,6), qual é mais ácido?",o:["Vinagre","Leite","Os dois são igualmente ácidos","Nenhum, os dois são básicos"],c:0,e:"Quanto menor o pH, mais ácida é a substância. O vinagre está bem mais perto do 0."},
+ {p:"Ao pingar o indicador de repolho roxo em uma solução, ela ficou verde. Como ela pode ser classificada?",o:["Ácida","Neutra","Básica","Não é possível saber"],c:2,e:"No repolho roxo, tons de azul, verde e amarelo aparecem em soluções básicas (pH acima de 7)."},
+ {p:"Uma solução com pH igual a 7, a 25 °C, é classificada como:",o:["Ácida","Neutra","Básica","Corrosiva"],c:1,e:"O pH 7 é o ponto neutro da escala, como a água pura."},
+ {p:"Por que o leite de magnésia alivia a azia?",o:["Porque é ácido e reforça a digestão","Porque é neutro e dilui o estômago","Porque é básico e neutraliza o excesso de ácido","Porque muda a cor do suco gástrico"],c:2,e:"Ácido + base produzem uma reação de neutralização. O antiácido básico reduz a acidez no estômago."},
+ {p:"Uma solução de pH 3 é quantas vezes mais ácida que uma de pH 4?",o:["1 vez (são iguais)","2 vezes","10 vezes","100 vezes"],c:2,e:"A escala de pH é logarítmica: cada unidade a menos significa 10 vezes mais íons H⁺ na solução."}
+];
+let qi=0,res=[];
+function pontos(){$("pontos").innerHTML=Q.map((_,k)=>`<b class="${res[k]===true?"c":res[k]===false?"e":k===qi?"atual":""}"></b>`).join("");
+  $("placar").textContent=`${res.filter(x=>x).length} de ${Q.length} acertos`}
+function mostrar(){
+  pontos();
+  if(qi>=Q.length){const n=res.filter(x=>x).length;
+    $("quiz").innerHTML=`<div class="final"><span class="eyebrow">Resultado</span><span class="nota">${n}/${Q.length}</span><p class="explica">${n===5?"Excelente! Você domina a escala de pH.":n>=3?"Bom trabalho! Revise no simulador as questões que errou.":"Volte ao simulador, explore as substâncias e tente de novo."}</p><button class="btn" id="refazer">Refazer desafios</button></div>`;
+    $("refazer").onclick=()=>{qi=0;res=[];mostrar()};return}
+  const q=Q[qi];
+  $("quiz").innerHTML=`<div style="display:flex;flex-direction:column;gap:12px"><span class="eyebrow">Desafio ${qi+1} de ${Q.length}</span><p class="pergunta">${q.p}</p><div class="ops">${q.o.map((t,k)=>`<button class="op" data-k="${k}">${t}</button>`).join("")}</div><div id="pos"></div></div>`;
+  document.querySelectorAll(".op").forEach(b=>b.onclick=()=>{
+    const k=+b.dataset.k,ok=k===q.c;res[qi]=ok;
+    document.querySelectorAll(".op").forEach(x=>{x.disabled=true;if(+x.dataset.k===q.c)x.classList.add("certa")});
+    if(!ok)b.classList.add("errada");
+    $("pos").innerHTML=`<div style="display:flex;flex-direction:column;gap:10px"><p class="explica"><strong>${ok?"Correto!":"Não foi dessa vez."}</strong> ${q.e}</p><button class="btn" id="prox">${qi<Q.length-1?"Próximo desafio":"Ver resultado"}</button></div>`;
+    pontos();$("prox").onclick=()=>{qi++;mostrar()};$("prox").focus();
+  });
+}
+mostrar();
+</script>
+
+</body></html>
